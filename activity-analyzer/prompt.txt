@@ -1,0 +1,2 @@
+Classify the activity as one of: programming, browsing, chatting, document writing, gaming.
+Return STRICT JSON with keys: label, confidence, reason.

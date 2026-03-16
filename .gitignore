@@ -1,0 +1,3 @@
+activity-analyzer/.env
+**/__pycache__/
+*.pyc

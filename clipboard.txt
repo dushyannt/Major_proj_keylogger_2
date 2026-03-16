@@ -1,0 +1,20 @@
+
+Time: 2026-03-16 14:31:12.199127
+Clipboard Data: Create a Python project that analyzes keylogger logs using the Gemini API.
+
+Project requirements:
+- Read keystroke logs from a file called keystrokes.txt
+- Clean and reconstruct meaningful text from raw keystrokes
+- Send the cleaned text to the Gemini API
+- Classify the user activity (programming, browsing, chatting, document writing, gaming)
+- Print the analysis result
+
+Create this folder structure:
+
+activity-analyzer/
+ +- main.py
+ +- keylog_processor.py
+ +- gemini_client.py
+ +- config.py
+ +- keystrokes.txt
+ +- requirements.txt

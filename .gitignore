@@ -1,3 +1,31 @@
+<<<<<<< HEAD
 activity-analyzer/.env
 **/__pycache__/
 *.pyc
+=======
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Generated files
+*.txt
+*.xlsx
+*.png
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db 
+>>>>>>> 42f8fe5c4ae7ac7b6269becbcf109c16d3f70b05

